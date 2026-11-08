@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tabla periódica interactiva</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&display=swap">
+<style>
+:root{--bg:#f6f7f4;--panel:#fff;--ink:#1b2320;--muted:#5d6b66;--line:#d5dad6;--cs:62%;--cl:86%;--bl:62%;--sel:#1b2320;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121715;--panel:#1b2320;--ink:#e9efec;--muted:#9aa9a3;--line:#2e3a36;--cs:34%;--cl:22%;--bl:38%;--sel:#fff;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#121715;--panel:#1b2320;--ink:#e9efec;--muted:#9aa9a3;--line:#2e3a36;--cs:34%;--cl:22%;--bl:38%;--sel:#fff;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Bricolage Grotesque",system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.4}
+main{max-width:1180px;margin:0 auto;padding:20px 16px 40px}
+h1{font-size:clamp(1.6rem,4vw,2.4rem);font-weight:800;margin:0 0 4px;letter-spacing:-.02em}
+.sub{color:var(--muted);margin:0 0 18px}
+.bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:14px}
+.bar input,.bar select{font:inherit;padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink)}
+.bar input{flex:1 1 220px;min-width:0}
+.legend{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px}
+.chip{font:inherit;font-size:.82rem;display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer}
+.chip i{width:12px;height:12px;border-radius:3px;background:hsl(var(--h) var(--cs) var(--cl));border:1px solid hsl(var(--h) var(--cs) var(--bl))}
+.chip[aria-pressed="true"]{outline:2px solid var(--sel);outline-offset:1px}
+.detail{display:flex;gap:18px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:16px;flex-wrap:wrap}
+.big{width:128px;height:128px;flex:none;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:hsl(var(--h) var(--cs) var(--cl));border:2px solid hsl(var(--h) var(--cs) var(--bl))}
+.big b{font-size:3.6rem;line-height:1;font-weight:800}
+.big span{font-size:.85rem;color:var(--muted)}
+.info{flex:1 1 280px}
+.info h2{margin:0 0 8px;font-size:1.5rem}
+dl{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px 16px;margin:0}
+dt{font-size:.78rem;color:var(--muted)}
+dd{margin:0;font-weight:600}
+.scroll{overflow-x:auto;padding-bottom:6px}
+.table{display:grid;grid-template-columns:repeat(18,minmax(50px,1fr));grid-template-rows:repeat(7,auto) 14px repeat(2,auto);gap:3px;min-width:940px}
+.el{font:inherit;color:var(--ink);text-align:left;cursor:pointer;padding:4px 5px;min-height:58px;border-radius:6px;border:1px solid hsl(var(--h) var(--cs) var(--bl));background:hsl(var(--h) var(--cs) var(--cl));display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;transition:opacity .15s}
+.el small{font-size:.62rem;color:var(--muted)}
+.el strong{font-size:1.15rem;line-height:1;font-weight:800}
+.el em{font-style:normal;font-size:.56rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.el.dim{opacity:.16}
+.el.sel{outline:3px solid var(--sel);outline-offset:1px;position:relative;z-index:1}
+.el:focus-visible,.chip:focus-visible{outline:3px solid var(--sel);outline-offset:2px}
+.ph{background:transparent;border-style:dashed;justify-content:center;align-items:center;font-size:.68rem;color:var(--muted)}
+.note{color:var(--muted);font-size:.82rem;margin-top:14px}
+.cfg{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:16px}
+.cfg h3{margin:0 0 4px;font-size:1.2rem}
+.how{color:var(--muted);font-size:.9rem;margin:0 0 12px;max-width:72ch}
+.cfgbody{display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start}
+.cfgbody svg{width:100%;height:auto;display:block}
+.side{flex:1 1 260px;min-width:0}
+.say{min-height:6.5em;padding:10px 12px;border-radius:10px;background:var(--bg);border:1px solid var(--line);margin-bottom:10px}
+.ctl{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.ctl button{font:inherit;padding:7px 12px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer}
+.ctl button.main{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.ctl button:disabled{opacity:.4;cursor:default}
+.ctl button:focus-visible{outline:3px solid var(--sel);outline-offset:2px}
+.conf{font-size:1.25rem;font-weight:600;line-height:1.8;word-spacing:.2em;margin:0 0 4px}
+.conf .on{outline:2px solid var(--sel);border-radius:4px;padding:0 2px}
+.sh{font-size:.9rem;color:var(--muted);margin:6px 0 0}
+.lbl{fill:var(--ink);font-weight:700;font-size:15px}
+.hd{fill:var(--muted);font-size:12px}
+.arw{stroke:var(--ink);stroke-width:3;fill:none}
+.arh{fill:var(--ink)}
+.cl{font-weight:700;font-size:15px;fill:#1b2320}
+.cl.em{fill:var(--muted);font-weight:400}
+.bd{fill:var(--ink)}
+.bt{fill:var(--bg);font-size:10px;font-weight:600}
+@media (prefers-reduced-motion:reduce){.el{transition:none}}
+</style>
+</head>
+<body>
+<main>
+<h1>Tabla periódica</h1>
+<p class="sub">Toca un elemento para ver sus datos. Filtra por familia o busca por nombre, símbolo o número atómico.</p>
+<div class="bar">
+<input id="q" type="search" placeholder="Buscar: oro, Fe, 26…" aria-label="Buscar elemento">
+<select id="mode" aria-label="Colorear por"><option value="c">Colorear por familia</option><option value="s">Colorear por estado a 25 °C</option></select>
+</div>
+<div class="legend" id="legend"></div>
+<section class="detail" id="detail" aria-live="polite"></section>
+<section class="cfg" id="cfg"></section>
+<div class="scroll"><div class="table" id="table"></div></div>
+<p class="note">Los estados y las familias de los elementos 104 a 118 son predicciones: se han producido solo unos pocos átomos de cada uno.</p>
+</main>
+<script>
+const RAW="H,Hidrógeno,1.008,n|He,Helio,4.0026,g|Li,Litio,6.94,a|Be,Berilio,9.0122,e|B,Boro,10.81,m|C,Carbono,12.011,n|N,Nitrógeno,14.007,n|O,Oxígeno,15.999,n|F,Flúor,18.998,h|Ne,Neón,20.180,g|Na,Sodio,22.990,a|Mg,Magnesio,24.305,e|Al,Aluminio,26.982,p|Si,Silicio,28.085,m|P,Fósforo,30.974,n|S,Azufre,32.06,n|Cl,Cloro,35.45,h|Ar,Argón,39.95,g|K,Potasio,39.098,a|Ca,Calcio,40.078,e|Sc,Escandio,44.956,t|Ti,Titanio,47.867,t|V,Vanadio,50.942,t|Cr,Cromo,51.996,t|Mn,Manganeso,54.938,t|Fe,Hierro,55.845,t|Co,Cobalto,58.933,t|Ni,Níquel,58.693,t|Cu,Cobre,63.546,t|Zn,Zinc,65.38,t|Ga,Galio,69.723,p|Ge,Germanio,72.630,m|As,Arsénico,74.922,m|Se,Selenio,78.971,n|Br,Bromo,79.904,h|Kr,Kriptón,83.798,g|Rb,Rubidio,85.468,a|Sr,Estroncio,87.62,e|Y,Itrio,88.906,t|Zr,Circonio,91.224,t|Nb,Niobio,92.906,t|Mo,Molibdeno,95.95,t|Tc,Tecnecio,98,t|Ru,Rutenio,101.07,t|Rh,Rodio,102.91,t|Pd,Paladio,106.42,t|Ag,Plata,107.87,t|Cd,Cadmio,112.41,t|In,Indio,114.82,p|Sn,Estaño,118.71,p|Sb,Antimonio,121.76,m|Te,Telurio,127.60,m|I,Yodo,126.90,h|Xe,Xenón,131.29,g|Cs,Cesio,132.91,a|Ba,Bario,137.33,e|La,Lantano,138.91,l|Ce,Cerio,140.12,l|Pr,Praseodimio,140.91,l|Nd,Neodimio,144.24,l|Pm,Prometio,145,l|Sm,Samario,150.36,l|Eu,Europio,151.96,l|Gd,Gadolinio,157.25,l|Tb,Terbio,158.93,l|Dy,Disprosio,162.50,l|Ho,Holmio,164.93,l|Er,Erbio,167.26,l|Tm,Tulio,168.93,l|Yb,Iterbio,173.05,l|Lu,Lutecio,174.97,l|Hf,Hafnio,178.49,t|Ta,Tántalo,180.95,t|W,Wolframio,183.84,t|Re,Renio,186.21,t|Os,Osmio,190.23,t|Ir,Iridio,192.22,t|Pt,Platino,195.08,t|Au,Oro,196.97,t|Hg,Mercurio,200.59,t|Tl,Talio,204.38,p|Pb,Plomo,207.2,p|Bi,Bismuto,208.98,p|Po,Polonio,209,p|At,Astato,210,h|Rn,Radón,222,g|Fr,Francio,223,a|Ra,Radio,226,e|Ac,Actinio,227,c|Th,Torio,232.04,c|Pa,Protactinio,231.04,c|U,Uranio,238.03,c|Np,Neptunio,237,c|Pu,Plutonio,244,c|Am,Americio,243,c|Cm,Curio,247,c|Bk,Berkelio,247,c|Cf,Californio,251,c|Es,Einstenio,252,c|Fm,Fermio,257,c|Md,Mendelevio,258,c|No,Nobelio,259,c|Lr,Lawrencio,266,c|Rf,Rutherfordio,267,t|Db,Dubnio,268,t|Sg,Seaborgio,269,t|Bh,Bohrio,270,t|Hs,Hasio,277,t|Mt,Meitnerio,278,t|Ds,Darmstadtio,281,t|Rg,Roentgenio,282,t|Cn,Copernicio,285,t|Nh,Nihonio,286,p|Fl,Flerovio,289,p|Mc,Moscovio,290,p|Lv,Livermorio,293,p|Ts,Teneso,294,h|Og,Oganesón,294,g";
+const CATS={a:["Alcalinos",5],e:["Alcalinotérreos",28],t:["Metales de transición",215],p:["Otros metales",185],m:["Metaloides",150],n:["No metales",105],h:["Halógenos",265],g:["Gases nobles",295],l:["Lantánidos",48],c:["Actínidos",335]};
+const STS={s:["Sólido",215],l:["Líquido",150],g:["Gas",28],u:["Desconocido",0]};
+const GAS=[1,2,7,8,9,10,17,18,36,54,86];
+const E=RAW.split("|").map((s,i)=>{const [sym,name,mass,cat]=s.split(",");const z=i+1;
+ const st=GAS.includes(z)?"g":(z==35||z==80)?"l":z>=104||z==118?"u":"s";
+ let r,c;
+ if(z==1){r=1;c=1}else if(z==2){r=1;c=18}
+ else if(z<=4){r=2;c=z-2}else if(z<=10){r=2;c=z+8}
+ else if(z<=12){r=3;c=z-10}else if(z<=18){r=3;c=z}
+ else if(z<=36){r=4;c=z-18}else if(z<=54){r=5;c=z-36}
+ else if(z<=56){r=6;c=z-54}else if(z<=71){r=9;c=z-54}
+ else if(z<=86){r=6;c=z-68}else if(z<=88){r=7;c=z-86}
+ else if(z<=103){r=10;c=z-86}else{r=7;c=z-100}
+ const f=cat=="l"||cat=="c";
+ const per=f?(z<=71?6:7):r;
+ const grp=f?"—":c;
+ const blk=f?"f":(c<=2?"s":c>=13?"p":"d");
+ return {z,sym,name,mass,cat,st,r,c,per,grp,blk,syn:(z==43||z==61||z>=93)};
+});
+const $=id=>document.getElementById(id);
+let mode="c",filter=null,query="",sel=E[25],cells=[];
+const key=e=>mode=="c"?e.cat:e.st;
+const dict=()=>mode=="c"?CATS:STS;
+function hue(e){return dict()[key(e)][1]}
+function build(){
+ const t=$("table");t.innerHTML="";cells=[];
+ E.forEach(e=>{
+  const b=document.createElement("button");b.className="el";b.type="button";
+  b.style.gridRow=e.r;b.style.gridColumn=e.c;
+  b.innerHTML=`<small>${e.z}</small><strong>${e.sym}</strong><em>${e.name}</em>`;
+  b.setAttribute("aria-label",`${e.name}, número atómico ${e.z}`);
+  b.onclick=()=>pick(e);b.onmouseenter=()=>pick(e);b.onfocus=()=>pick(e);
+  t.appendChild(b);cells.push(b);
+ });
+ [["57–71",6,"l"],["89–103",7,"c"]].forEach(([txt,r,k])=>{
+  const p=document.createElement("button");p.type="button";p.className="el ph";p.textContent=txt;
+  p.style.gridRow=r;p.style.gridColumn=3;p.title="Filtrar esta familia";
+  p.onclick=()=>{mode="c";$("mode").value="c";filter=filter==k?null:k;legend();paint()};
+  t.appendChild(p);
+ });
+}
+function legend(){
+ const L=$("legend");L.innerHTML="";
+ Object.entries(dict()).forEach(([k,[n,h]])=>{
+  const b=document.createElement("button");b.type="button";b.className="chip";
+  b.style.setProperty("--h",h);b.setAttribute("aria-pressed",filter==k);
+  b.innerHTML=`<i></i>${n}`;
+  b.onclick=()=>{filter=filter==k?null:k;legend();paint()};
+  L.appendChild(b);
+ });
+}
+function match(e){
+ if(!query)return true;
+ const q=query.toLowerCase(),n=e.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+ const qn=q.normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+ return e.sym.toLowerCase()==q||String(e.z)==q||n.includes(qn);
+}
+function paint(){
+ E.forEach((e,i)=>{
+  const c=cells[i];c.style.setProperty("--h",hue(e));
+  c.classList.toggle("dim",(filter&&key(e)!=filter)||!match(e));
+  c.classList.toggle("sel",e===sel);
+ });
+ document.querySelectorAll(".ph").forEach(p=>{p.style.setProperty("--h",0)});
+}
+function pick(e){
+ sel=e;
+ const d=$("detail");
+ d.innerHTML=`<div class="big" style="--h:${hue(e)}"><span>${e.z}</span><b>${e.sym}</b><span>${e.mass}</span></div>
+ <div class="info"><h2>${e.name}</h2><dl>
+ <div><dt>Número atómico</dt><dd>${e.z}</dd></div>
+ <div><dt>Masa atómica (u)</dt><dd>${e.mass}${e.syn?" (isótopo estable más longevo)":""}</dd></div>
+ <div><dt>Familia</dt><dd>${CATS[e.cat][0]}</dd></div>
+ <div><dt>Periodo</dt><dd>${e.per}</dd></div>
+ <div><dt>Grupo</dt><dd>${e.grp}</dd></div>
+ <div><dt>Bloque</dt><dd>${e.blk}</dd></div>
+ <div><dt>Estado a 25 °C</dt><dd>${STS[e.st][0]}</dd></div>
+ <div><dt>Origen</dt><dd>${e.syn?"Sintético":"Natural"}</dd></div>
+ </dl></div>`;
+ cells.forEach((c,i)=>c.classList.toggle("sel",E[i]===e));
+ cfgInit(e);
+}
+$("q").oninput=ev=>{query=ev.target.value.trim();paint();
+ if(query){const m=E.find(match);if(m)pick(m)}};
+$("mode").onchange=ev=>{mode=ev.target.value;filter=null;legend();paint();pick(sel)};
+/* ===== Configuración electrónica ===== */
+const CAP={s:2,p:6,d:10,f:14},LS={s:0,p:1,d:2,f:3},LAY={1:"s",2:"sp",3:"spd",4:"spdf",5:"spdf",6:"spd",7:"sp"};
+const SUB=[];for(const n in LAY)for(const k of LAY[n])SUB.push({n:+n,k,id:n+k,g:+n+LS[k]});
+const ORD=[...SUB].sort((a,b)=>a.g-b.g||a.n-b.n);
+const GH=[48,28,6,335,290,250,190,150],NG={2:1,10:3,18:5,36:8,54:11,86:15},LV="KLMNOPQ",SUP="⁰¹²³⁴⁵⁶⁷⁸⁹";
+const OVR={24:{"4s":1,"3d":5},29:{"4s":1,"3d":10},41:{"5s":1,"4d":4},42:{"5s":1,"4d":5},44:{"5s":1,"4d":7},45:{"5s":1,"4d":8},46:{"5s":0,"4d":10},47:{"5s":1,"4d":10},57:{"4f":0,"5d":1},58:{"4f":1,"5d":1},64:{"4f":7,"5d":1},78:{"6s":1,"4f":14,"5d":9},79:{"6s":1,"5d":10},89:{"5f":0,"6d":1},90:{"5f":0,"6d":2},91:{"5f":2,"6d":1},92:{"5f":3,"6d":1},93:{"5f":4,"6d":1},96:{"5f":7,"6d":1},103:{"6d":0,"7p":1}};
+const sup=n=>String(n).split("").map(d=>SUP[d]).join("");
+function config(z){let r=z;const c={};ORD.forEach(s=>{const t=Math.min(r,CAP[s.k]);c[s.id]=t;r-=t});return Object.assign(c,OVR[z]||{})}
+let cur=E[25],steps=[],idx=0,timer=null;
+$("cfg").innerHTML=`<h3 id="cfgT"></h3>
+<p class="how">Los electrones se acomodan en «cajones» de energía. Cada fila es un <b>nivel</b> (K, L, M…) y cada columna un tipo de <b>subnivel</b> (s, p, d, f) con un máximo de electrones. Sigue las flechas en orden, de la primera a la última, y llena cada círculo hasta su máximo antes de pasar al siguiente.</p>
+<div class="cfgbody"><div id="svg" style="flex:1 1 360px;max-width:520px"></div><div class="side">
+<div class="say" id="say" aria-live="polite"></div>
+<div class="ctl"><button id="b0" type="button">Reiniciar</button><button id="b1" type="button">◀ Anterior</button><button id="b2" type="button" class="main">Siguiente ▶</button><button id="b3" type="button">Reproducir</button><button id="b4" type="button">Ver completa</button></div>
+<p class="conf" id="conf"></p><p class="sh" id="short"></p><p class="sh" id="shells"></p></div></div>`;
+function stop(){clearInterval(timer);timer=null}
+function go(i){idx=Math.max(0,Math.min(steps.length,i));cfgRender()}
+$("b0").onclick=()=>{stop();go(0)};$("b1").onclick=()=>{stop();go(idx-1)};$("b2").onclick=()=>{stop();go(idx+1)};$("b4").onclick=()=>{stop();go(steps.length)};
+$("b3").onclick=()=>{stop();go(0);timer=setInterval(()=>{if(idx<steps.length)go(idx+1);else stop()},900)};
+function cfgInit(e){stop();cur=e;const c=config(e.z);steps=ORD.filter(s=>c[s.id]>0).map(s=>({s,n:c[s.id]}));idx=steps.length;cfgRender()}
+function cfgRender(){
+ const e=cur,got={};let tot=0;steps.slice(0,idx).forEach(x=>{got[x.s.id]=x.n;tot+=x.n});
+ $("cfgT").textContent=`Así se construye la configuración de ${e.name} (${e.sym}): ${e.z} electrones`;
+ const X={s:130,p:235,d:340,f:445},Y=n=>68+(n-1)*60,act=idx?steps[idx-1].s.id:null;
+ let v=`<svg viewBox="0 0 560 450" role="img" aria-label="Diagrama de llenado de subniveles"><defs><marker id="ah" markerWidth="9" markerHeight="9" refX="6" refY="4.5" orient="auto"><path class="arh" d="M0,0L9,4.5L0,9z"/></marker></defs>`;
+ v+=`<text class="hd" x="8" y="14">Nivel</text><text class="hd" x="8" y="28">energético</text>`;
+ for(const k in X)v+=`<text class="hd" x="${X[k]}" y="14" text-anchor="middle">Subnivel ${k}</text><text class="hd" x="${X[k]}" y="28" text-anchor="middle">${CAP[k]} electrones</text>`;
+ for(let n=1;n<=7;n++)v+=`<text class="lbl" x="8" y="${Y(n)+5}">${LV[n-1]} = ${n}</text>`;
+ for(let g=1;g<=8;g++){const m=SUB.filter(s=>s.g==g).sort((a,b)=>a.n-b.n),a=m[0],b=m[m.length-1];
+  const sx=-105*.36,sy=60*.36;
+  v+=`<line class="arw" marker-end="url(#ah)" x1="${X[a.k]-sx}" y1="${Y(a.n)-sy}" x2="${X[b.k]+sx}" y2="${Y(b.n)+sy}"/>`}
+ SUB.forEach(s=>{const x=X[s.k],y=Y(s.n),c=got[s.id]||0,cap=CAP[s.k];
+  v+=`<g><title>Subnivel ${s.id}: caben hasta ${cap} electrones${c?"; tiene "+c:""}</title><circle cx="${x}" cy="${y}" r="23" fill="${c?`hsl(${GH[s.g-1]} 85% 62%)`:"var(--line)"}" ${s.id==act?'stroke="var(--sel)" stroke-width="4"':""}/><text class="cl${c?"":" em"}" x="${x}" y="${y+5}" text-anchor="middle">${s.id}</text>`;
+  if(c)v+=`<rect class="bd" x="${x+8}" y="${y-33}" width="34" height="16" rx="8"/><text class="bt" x="${x+25}" y="${y-21.5}" text-anchor="middle">${c}/${cap}</text>`;
+  v+=`</g>`});
+ $("svg").innerHTML=v+"</svg>";
+ let say;
+ if(!idx)say=`Tenemos <b>${e.z}</b> electrones por colocar y todos los círculos están vacíos. Pulsa <b>Siguiente</b> para llenar el primero, o <b>Reproducir</b> para verlo animado.`;
+ else{const x=steps[idx-1],cap=CAP[x.s.k];
+  say=`<b>Paso ${idx} de ${steps.length}:</b> el subnivel <b>${x.s.id}</b> admite hasta ${cap} electrones. `+(x.n==cap?`Lo llenamos por completo.`:`Aquí ponemos ${x.n}`+(idx==steps.length&&!OVR[e.z]?`: son los que sobran, así que queda a medias.`:`.`))+` Llevamos <b>${tot}</b> de ${e.z}.`;
+  if(idx==steps.length)say+=` <b>¡Listo!</b>`+(OVR[e.z]?` Ojo: ${e.name} es una excepción. Un electrón cambia de subnivel porque quedar medio lleno o lleno es más estable.`:"")}
+ $("say").innerHTML=say;
+ $("conf").innerHTML=steps.slice(0,idx).map((x,i)=>`<span class="${i==idx-1?"on":""}">${x.s.id}${sup(x.n)}</span>`).join(" ")||"—";
+ const nk=Object.keys(NG).map(Number).filter(k=>k<e.z).pop();
+ $("short").innerHTML=(idx==steps.length&&nk)?`Forma corta: <b>[${E[nk-1].sym}] ${steps.slice(NG[nk]).map(x=>x.s.id+sup(x.n)).join(" ")}</b> (el gas noble ${E[nk-1].name.toLowerCase()} resume los primeros ${nk} electrones)`:"";
+ const sh={};Object.entries(got).forEach(([id,n])=>sh[id[0]]=(sh[id[0]]||0)+n);
+ const ks=Object.keys(sh);
+ $("shells").innerHTML=ks.length?`Electrones por nivel: ${ks.map(n=>`${LV[n-1]} (${n}) = ${sh[n]}`).join(" · ")}`:"";
+ $("b0").disabled=$("b1").disabled=idx==0;$("b2").disabled=$("b4").disabled=idx==steps.length;
+}
+build();legend();paint();pick(sel);
+</script>
+</body>
+</html>
